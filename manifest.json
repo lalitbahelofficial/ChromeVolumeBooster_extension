@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Clean Volume Booster",
+  "description": "Boost and shape audio for the current Chrome tab with per-site presets and safety controls.",
+  "version": "1.0.0",
+  "action": {
+    "default_title": "Volume Booster",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "permissions": [
+    "activeTab",
+    "offscreen",
+    "storage",
+    "tabCapture"
+  ]
+}
