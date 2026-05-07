@@ -1,3 +1,5 @@
+// #Lalittesting
+// Offscreen document used for tab audio capture and processing.
 const OFFSCREEN_DOCUMENT_PATH = 'offscreen.html';
 const DEFAULT_SETTINGS = {
   enabled: false,
@@ -8,10 +10,8 @@ const DEFAULT_SETTINGS = {
 };
 
 const tabSettings = new Map();
-codex/create-chrome-volume-booster-extension-jcxbpt
 const capturedTabs = new Set();
-
-main
+const restartTimers = new Map();
 let creatingOffscreenDocument = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -23,11 +23,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabSettings.delete(tabId);
-codex/create-chrome-volume-booster-extension-jcxbpt
   capturedTabs.delete(tabId);
-
-main
+  clearRestartTimer(tabId);
   chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP_AUDIO', tabId }).catch(() => undefined);
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  const settings = tabSettings.get(tabId);
+  if (!settings?.enabled) return;
+
+  if (changeInfo.url || changeInfo.status === 'complete') {
+    scheduleAudioRestart(tabId);
+  }
 });
 
 async function handleMessage(message) {
@@ -42,54 +49,79 @@ async function handleMessage(message) {
     const tabId = Number(message.tabId);
     const settings = normalizeSettings(message.settings);
     tabSettings.set(tabId, settings);
-    await ensureOffscreenDocument();
-
- codex/create-chrome-volume-booster-extension-jcxbpt
-    if (capturedTabs.has(tabId)) {
-      const updateResponse = await chrome.runtime.sendMessage({
-        type: 'OFFSCREEN_UPDATE_AUDIO',
-        tabId,
-        settings
-      });
-
-      if (updateResponse?.ok) {
-        return { ok: true, message: `Boosting this tab at ${settings.volume}%.` };
-      }
-
-      capturedTabs.delete(tabId);
-    }
-
-    const streamId = await getStreamId(tabId);
-    await chrome.runtime.sendMessage({
-      type: 'OFFSCREEN_START_AUDIO',
-
-    const streamId = await getStreamId(tabId);
-    await chrome.runtime.sendMessage({
-      type: 'OFFSCREEN_START_OR_UPDATE_AUDIO',
- main
-      tabId,
-      streamId,
-      settings
-    });
-codex/create-chrome-volume-booster-extension-jcxbpt
-    capturedTabs.add(tabId);
-
- main
-
+    clearRestartTimer(tabId);
+    await startOrUpdateAudio(tabId, settings);
     return { ok: true, message: `Boosting this tab at ${settings.volume}%.` };
   }
 
   if (message.type === 'STOP_AUDIO') {
     const tabId = Number(message.tabId);
     tabSettings.set(tabId, normalizeSettings({ ...message.settings, enabled: false }));
-codex/create-chrome-volume-booster-extension-jcxbpt
     capturedTabs.delete(tabId);
-main
+    clearRestartTimer(tabId);
     await chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP_AUDIO', tabId }).catch(() => undefined);
     return { ok: true, message: 'Volume booster is off.' };
   }
 
+  if (message.type === 'OFFSCREEN_AUDIO_ENDED') {
+    const tabId = Number(message.tabId);
+    capturedTabs.delete(tabId);
+    const settings = tabSettings.get(tabId);
+    if (settings?.enabled) scheduleAudioRestart(tabId, 250);
+    return { ok: true };
+  }
+
   return { ok: false, message: 'Unknown extension message.' };
+}
+
+async function startOrUpdateAudio(tabId, settings, forceRestart = false) {
+  await ensureOffscreenDocument();
+
+  if (!forceRestart && capturedTabs.has(tabId)) {
+    const updateResponse = await chrome.runtime.sendMessage({
+      type: 'OFFSCREEN_UPDATE_AUDIO',
+      tabId,
+      settings
+    });
+
+    if (updateResponse?.ok) return;
+  }
+
+  capturedTabs.delete(tabId);
+  const streamId = await getStreamId(tabId);
+  await chrome.runtime.sendMessage({
+    type: 'OFFSCREEN_START_AUDIO',
+    tabId,
+    streamId,
+    settings
+  });
+  capturedTabs.add(tabId);
+}
+
+function scheduleAudioRestart(tabId, delay = 700) {
+  clearRestartTimer(tabId);
+
+  const timer = setTimeout(async () => {
+    restartTimers.delete(tabId);
+    const settings = tabSettings.get(tabId);
+    if (!settings?.enabled) return;
+
+    try {
+      await startOrUpdateAudio(tabId, settings, true);
+    } catch (error) {
+      capturedTabs.delete(tabId);
+      console.warn('Could not restart captured tab audio:', error.message);
+    }
+  }, delay);
+
+  restartTimers.set(tabId, timer);
+}
+
+function clearRestartTimer(tabId) {
+  const timer = restartTimers.get(tabId);
+  if (!timer) return;
+  clearTimeout(timer);
+  restartTimers.delete(tabId);
 }
 
 async function ensureOffscreenDocument() {

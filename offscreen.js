@@ -1,3 +1,4 @@
+// #Lalittesting
 const DEFAULT_SETTINGS = {
   enabled: false,
   volume: 100,
@@ -16,7 +17,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message) {
-codex/create-chrome-volume-booster-extension-jcxbpt
   if (message.type === 'OFFSCREEN_START_AUDIO') {
     await startAudio(message.tabId, message.streamId, normalizeSettings(message.settings));
     return { ok: true };
@@ -26,12 +26,6 @@ codex/create-chrome-volume-booster-extension-jcxbpt
     return updateAudio(message.tabId, normalizeSettings(message.settings));
   }
 
-  if (message.type === 'OFFSCREEN_START_OR_UPDATE_AUDIO') {
-    await startOrUpdateAudio(message.tabId, message.streamId, normalizeSettings(message.settings));
-    return { ok: true };
-  }
-
-main
   if (message.type === 'OFFSCREEN_STOP_AUDIO') {
     stopAudio(message.tabId);
     return { ok: true };
@@ -40,18 +34,7 @@ main
   return { ok: false };
 }
 
-codex/create-chrome-volume-booster-extension-jcxbpt
 async function startAudio(tabId, streamId, settings) {
-
-async function startOrUpdateAudio(tabId, streamId, settings) {
-  const existingSession = audioSessions.get(tabId);
-
-  if (existingSession?.streamId === streamId) {
-    applySettings(existingSession, settings);
-    return;
-  }
-
- main
   stopAudio(tabId);
 
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -93,16 +76,19 @@ async function startOrUpdateAudio(tabId, streamId, settings) {
     midFilter,
     settings,
     source,
+    stopping: false,
     stream,
     streamId,
     trebleFilter
   };
 
+  stream.getTracks().forEach((track) => {
+    track.addEventListener('ended', () => handleStreamEnded(tabId, session), { once: true });
+  });
+
   audioSessions.set(tabId, session);
   applySettings(session, settings);
 }
-
-codex/create-chrome-volume-booster-extension-jcxbpt
 
 function updateAudio(tabId, settings) {
   const session = audioSessions.get(tabId);
@@ -115,8 +101,6 @@ function updateAudio(tabId, settings) {
   return { ok: true };
 }
 
-
-main
 function applySettings(session, settings) {
   session.settings = settings;
   const boostGain = settings.enabled ? settings.volume / 100 : 1;
@@ -140,6 +124,7 @@ function stopAudio(tabId) {
   const session = audioSessions.get(tabId);
   if (!session) return;
 
+  session.stopping = true;
   session.stream.getTracks().forEach((track) => track.stop());
   session.source.disconnect();
   session.bassFilter.disconnect();
@@ -149,6 +134,13 @@ function stopAudio(tabId) {
   session.gain.disconnect();
   session.audioContext.close();
   audioSessions.delete(tabId);
+}
+
+function handleStreamEnded(tabId, session) {
+  if (session.stopping || audioSessions.get(tabId) !== session) return;
+
+  stopAudio(tabId);
+  chrome.runtime.sendMessage({ type: 'OFFSCREEN_AUDIO_ENDED', tabId }).catch(() => undefined);
 }
 
 function createBiquad(audioContext, type, frequency, q = null) {
