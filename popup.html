@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Volume Booster</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="app" aria-live="polite">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Current tab</p>
+          <h1>Volume Booster</h1>
+        </div>
+        <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark and light theme">☾</button>
+      </header>
+
+      <section class="card status-card">
+        <div>
+          <span id="siteLabel" class="site">This website</span>
+          <p id="statusText" class="muted">Ready to boost this tab.</p>
+        </div>
+        <label class="switch" aria-label="Enable volume booster">
+          <input id="enabledToggle" type="checkbox">
+          <span class="track"><span class="thumb"></span></span>
+        </label>
+      </section>
+
+      <section class="card">
+        <div class="row between">
+          <label for="volumeSlider">Volume</label>
+          <strong id="volumeValue">100%</strong>
+        </div>
+        <input id="volumeSlider" type="range" min="100" max="500" step="5" value="100">
+        <div class="presets" aria-label="Volume presets">
+          <button type="button" data-volume="100">100%</button>
+          <button type="button" data-volume="150">150%</button>
+          <button type="button" data-volume="200">200%</button>
+          <button type="button" data-volume="300">300%</button>
+          <button id="resetButton" type="button" class="danger">Reset</button>
+        </div>
+      </section>
+
+      <section class="card grid-2">
+        <label class="check-row">
+          <input id="bassBoostToggle" type="checkbox">
+          <span>Bass boost</span>
+        </label>
+        <label class="check-row">
+          <input id="limiterToggle" type="checkbox" checked>
+          <span>Limiter</span>
+        </label>
+      </section>
+
+      <section class="card eq-card">
+        <div class="row between">
+          <h2>3-band EQ</h2>
+          <button id="eqResetButton" type="button" class="link-button">Flat</button>
+        </div>
+        <label> Bass <span id="bassValue">0 dB</span>
+          <input id="bassSlider" type="range" min="-12" max="12" step="1" value="0">
+        </label>
+        <label> Mid <span id="midValue">0 dB</span>
+          <input id="midSlider" type="range" min="-12" max="12" step="1" value="0">
+        </label>
+        <label> Treble <span id="trebleValue">0 dB</span>
+          <input id="trebleSlider" type="range" min="-12" max="12" step="1" value="0">
+        </label>
+      </section>
+
+      <section class="card">
+        <label class="check-row">
+          <input id="saveSiteToggle" type="checkbox">
+          <span>Save these settings for this website</span>
+        </label>
+      </section>
+
+      <p id="warningText" class="warning">High volume may damage speakers or hearing. Use boosted levels carefully.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
