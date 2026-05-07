@@ -16,11 +16,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message) {
+codex/create-chrome-volume-booster-extension-jcxbpt
+  if (message.type === 'OFFSCREEN_START_AUDIO') {
+    await startAudio(message.tabId, message.streamId, normalizeSettings(message.settings));
+    return { ok: true };
+  }
+
+  if (message.type === 'OFFSCREEN_UPDATE_AUDIO') {
+    return updateAudio(message.tabId, normalizeSettings(message.settings));
+  }
+
   if (message.type === 'OFFSCREEN_START_OR_UPDATE_AUDIO') {
     await startOrUpdateAudio(message.tabId, message.streamId, normalizeSettings(message.settings));
     return { ok: true };
   }
 
+main
   if (message.type === 'OFFSCREEN_STOP_AUDIO') {
     stopAudio(message.tabId);
     return { ok: true };
@@ -28,6 +39,9 @@ async function handleMessage(message) {
 
   return { ok: false };
 }
+
+codex/create-chrome-volume-booster-extension-jcxbpt
+async function startAudio(tabId, streamId, settings) {
 
 async function startOrUpdateAudio(tabId, streamId, settings) {
   const existingSession = audioSessions.get(tabId);
@@ -37,6 +51,7 @@ async function startOrUpdateAudio(tabId, streamId, settings) {
     return;
   }
 
+ main
   stopAudio(tabId);
 
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -87,6 +102,21 @@ async function startOrUpdateAudio(tabId, streamId, settings) {
   applySettings(session, settings);
 }
 
+codex/create-chrome-volume-booster-extension-jcxbpt
+
+function updateAudio(tabId, settings) {
+  const session = audioSessions.get(tabId);
+
+  if (!session) {
+    return { ok: false, message: 'No active audio session for this tab.' };
+  }
+
+  applySettings(session, settings);
+  return { ok: true };
+}
+
+
+main
 function applySettings(session, settings) {
   session.settings = settings;
   const boostGain = settings.enabled ? settings.volume / 100 : 1;
