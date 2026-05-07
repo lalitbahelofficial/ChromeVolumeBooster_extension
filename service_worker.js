@@ -8,7 +8,10 @@ const DEFAULT_SETTINGS = {
 };
 
 const tabSettings = new Map();
+codex/create-chrome-volume-booster-extension-jcxbpt
 const capturedTabs = new Set();
+
+main
 let creatingOffscreenDocument = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -20,7 +23,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabSettings.delete(tabId);
+codex/create-chrome-volume-booster-extension-jcxbpt
   capturedTabs.delete(tabId);
+
+main
   chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP_AUDIO', tabId }).catch(() => undefined);
 });
 
@@ -38,6 +44,7 @@ async function handleMessage(message) {
     tabSettings.set(tabId, settings);
     await ensureOffscreenDocument();
 
+ codex/create-chrome-volume-booster-extension-jcxbpt
     if (capturedTabs.has(tabId)) {
       const updateResponse = await chrome.runtime.sendMessage({
         type: 'OFFSCREEN_UPDATE_AUDIO',
@@ -55,11 +62,19 @@ async function handleMessage(message) {
     const streamId = await getStreamId(tabId);
     await chrome.runtime.sendMessage({
       type: 'OFFSCREEN_START_AUDIO',
+
+    const streamId = await getStreamId(tabId);
+    await chrome.runtime.sendMessage({
+      type: 'OFFSCREEN_START_OR_UPDATE_AUDIO',
+ main
       tabId,
       streamId,
       settings
     });
+codex/create-chrome-volume-booster-extension-jcxbpt
     capturedTabs.add(tabId);
+
+ main
 
     return { ok: true, message: `Boosting this tab at ${settings.volume}%.` };
   }
@@ -67,7 +82,9 @@ async function handleMessage(message) {
   if (message.type === 'STOP_AUDIO') {
     const tabId = Number(message.tabId);
     tabSettings.set(tabId, normalizeSettings({ ...message.settings, enabled: false }));
+codex/create-chrome-volume-booster-extension-jcxbpt
     capturedTabs.delete(tabId);
+main
     await chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP_AUDIO', tabId }).catch(() => undefined);
     return { ok: true, message: 'Volume booster is off.' };
   }
