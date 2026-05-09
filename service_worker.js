@@ -37,29 +37,32 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-async function handleMessage(message) {
+async function handleMessage(message, sender) {
   if (message.type === 'GET_TAB_STATE') {
+    const tabId = getMessageTabId(message, sender);
     return {
       ok: true,
-      settings: tabSettings.get(message.tabId) || null
+      settings: tabSettings.get(tabId) || null
     };
   }
 
   if (message.type === 'START_OR_UPDATE_AUDIO') {
-    const tabId = Number(message.tabId);
+    const tabId = getMessageTabId(message, sender);
     const settings = normalizeSettings(message.settings);
     tabSettings.set(tabId, settings);
     clearRestartTimer(tabId);
     await startOrUpdateAudio(tabId, settings);
+    notifyTabStateChanged(tabId, settings);
     return { ok: true, message: `Boosting this tab at ${settings.volume}%.` };
   }
 
   if (message.type === 'STOP_AUDIO') {
-    const tabId = Number(message.tabId);
+    const tabId = getMessageTabId(message, sender);
     tabSettings.set(tabId, normalizeSettings({ ...message.settings, enabled: false }));
     capturedTabs.delete(tabId);
     clearRestartTimer(tabId);
     await chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP_AUDIO', tabId }).catch(() => undefined);
+    notifyTabStateChanged(tabId, tabSettings.get(tabId));
     return { ok: true, message: 'Volume booster is off.' };
   }
 
@@ -72,6 +75,19 @@ async function handleMessage(message) {
   }
 
   return { ok: false, message: 'Unknown extension message.' };
+}
+
+function getMessageTabId(message, sender) {
+  const tabId = Number(message.tabId ?? sender?.tab?.id);
+  if (!Number.isInteger(tabId) || tabId < 0) {
+    throw new Error('Could not identify the current tab.');
+  }
+  return tabId;
+}
+
+function notifyTabStateChanged(tabId, settings) {
+  chrome.runtime.sendMessage({ type: 'TAB_STATE_CHANGED', tabId, settings }).catch(() => undefined);
+  chrome.tabs.sendMessage(tabId, { type: 'TAB_STATE_CHANGED', tabId, settings }).catch(() => undefined);
 }
 
 async function startOrUpdateAudio(tabId, settings, forceRestart = false) {
@@ -89,12 +105,17 @@ async function startOrUpdateAudio(tabId, settings, forceRestart = false) {
 
   capturedTabs.delete(tabId);
   const streamId = await getStreamId(tabId);
-  await chrome.runtime.sendMessage({
+  const startResponse = await chrome.runtime.sendMessage({
     type: 'OFFSCREEN_START_AUDIO',
     tabId,
     streamId,
     settings
   });
+
+  if (!startResponse?.ok) {
+    throw new Error(startResponse?.message || 'Could not start captured tab audio.');
+  }
+
   capturedTabs.add(tabId);
 }
 

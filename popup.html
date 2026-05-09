@@ -14,7 +14,10 @@
           <p class="eyebrow">Current tab</p>
           <h1>Volume Booster</h1>
         </div>
-        <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark and light theme">☾</button>
+        <div class="header-actions">
+          <button id="globalControlsToggle" class="icon-button" type="button" aria-label="Toggle in-page controls on all websites" aria-pressed="true">🌐</button>
+          <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark and light theme">☾</button>
+        </div>
       </header>
 
       <section class="card status-card">
@@ -25,6 +28,13 @@
         <label class="switch" aria-label="Enable volume booster">
           <input id="enabledToggle" type="checkbox">
           <span class="track"><span class="thumb"></span></span>
+        </label>
+      </section>
+
+      <section class="card">
+        <label class="check-row">
+          <input id="globalModeToggle" type="checkbox" checked>
+          <span>Global mode: apply volume, speed, and loop everywhere</span>
         </label>
       </section>
 
@@ -40,6 +50,26 @@
           <button type="button" data-volume="200">200%</button>
           <button type="button" data-volume="300">300%</button>
           <button id="resetButton" type="button" class="danger">Reset</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row between">
+          <label for="speedSlider">Speed</label>
+          <strong id="speedValue">1x</strong>
+        </div>
+        <label class="check-row speed-toggle-row">
+          <input id="speedEnabledToggle" type="checkbox">
+          <span>Speed control on</span>
+        </label>
+        <input id="speedSlider" type="range" min="0.25" max="10" step="0.25" value="1">
+        <div class="speed-presets" aria-label="Speed presets">
+          <button type="button" data-speed="0.5">0.5x</button>
+          <button type="button" data-speed="1">1x</button>
+          <button type="button" data-speed="1.5">1.5x</button>
+          <button type="button" data-speed="2">2x</button>
+          <button type="button" data-speed="5">5x</button>
+          <button type="button" data-speed="10">10x</button>
         </div>
       </section>
 

@@ -57,6 +57,7 @@ input {
 .row,
 .between,
 .status-card,
+.header-actions,
 .check-row {
   display: flex;
   align-items: center;
@@ -89,6 +90,10 @@ h2 {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.header-actions {
+  gap: 8px;
 }
 
 .card {
@@ -131,6 +136,15 @@ h2 {
   font-size: 18px;
 }
 
+.icon-button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.icon-button[aria-pressed="false"] {
+  opacity: 0.68;
+}
+
 .switch input {
   position: absolute;
   opacity: 0;
@@ -170,14 +184,23 @@ input[type="range"] {
   cursor: pointer;
 }
 
-.presets {
+.presets,
+.speed-presets {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 7px;
   margin-top: 12px;
 }
 
+.presets {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.speed-presets {
+  grid-template-columns: repeat(6, 1fr);
+}
+
 .presets button,
+.speed-presets button,
 .link-button {
   border-radius: 999px;
   background: rgba(124, 92, 255, 0.15);
@@ -188,6 +211,7 @@ input[type="range"] {
 }
 
 .presets button:hover,
+.speed-presets button:hover,
 .link-button:hover {
   background: rgba(124, 92, 255, 0.28);
 }
@@ -214,6 +238,10 @@ input[type="range"] {
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
+}
+
+.speed-toggle-row {
+  margin: 10px 0 8px;
 }
 
 .eq-card {

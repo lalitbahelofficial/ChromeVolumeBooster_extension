@@ -11,6 +11,10 @@ A lightweight Manifest V3 Chrome extension that boosts audio for the current tab
 - Basic 3-band equalizer for bass, mid, and treble
 - Limiter toggle for distortion protection
 - Optional per-website setting storage
+- In-page media control button for website players
+- Global globe toggle for showing or hiding in-page controls across websites
+- Playback speed controls from 0.25x to 10x
+- Current-video loop and A/B section loop controls
 - Dark/light popup UI
 - Safety warning for high volume
 
